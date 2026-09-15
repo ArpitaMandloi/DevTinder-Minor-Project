@@ -2,7 +2,7 @@ export const BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof window !== "undefined" && window.location.hostname === "localhost"
     ? "http://localhost:7777"
-    : "http://localhost:7777");
+    : "https://devtinder-hwam.onrender.com");
 
 export const formatExternalUrl = (url) => {
   if (!url) return "";
