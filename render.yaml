@@ -1,0 +1,30 @@
+﻿services:
+  - type: web
+    name: devtinder-minor-backend
+    env: node
+    plan: free
+    rootDir: DevTinder-backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 7777
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false
+
+  - type: web
+    name: devtinder-minor-frontend
+    env: static
+    rootDir: DevTinder-Frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -1,0 +1,46 @@
+﻿name: DevTinder Minor Project CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: DevTinder-backend/package-lock.json
+      - name: Install backend dependencies
+        run: |
+          cd DevTinder-backend
+          npm ci
+      - name: Syntax Check Backend
+        run: |
+          cd DevTinder-backend
+          node -c src/app.js
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+          cache-dependency-path: DevTinder-Frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: |
+          cd DevTinder-Frontend
+          npm ci
+      - name: Build frontend
+        run: |
+          cd DevTinder-Frontend
+          npm run build
