@@ -52,24 +52,43 @@
 
 ## 📸 Screenshots & UI Preview
 
-### 1. Developer Discovery Feed
-Explore other developers, view their technical skills, and send connection requests with a single click.
-
-![Discovery Feed](assets/feed_preview.jpg)
+### 🏠 Landing & Home Page
+![Home Page](assets/home_page.png)
 
 ---
 
-### 2. Profile Editor & Real-Time Live Preview
-Edit bio, age, gender, skills, GitHub, and LinkedIn links with an instant side-by-side live card preview.
-
-![Profile Editor](assets/profile_edit.jpg)
+### 📝 Signup & Authentication
+![Signup Page](assets/signup_page.png)
 
 ---
 
-### 3. Connections & Requests Management
-Manage your professional developer network and respond to incoming connection requests.
+### 🔐 Login Page
+![Login Page](assets/login_page.png)
 
-![Connections and Requests](assets/connections_preview.jpg)
+---
+
+### ❤️ Developer Feed & Discovery
+![Developer Feed](assets/feed_page.png)
+
+---
+
+### 👤 Profile View & Live Edit
+![Profile Page](assets/profile_page.png)
+
+---
+
+### 🎨 Concept & Feature Mockups
+
+| Developer Discovery Feed | Profile Editor & Live Preview |
+| :---: | :---: |
+| ![Discovery Feed](assets/feed_preview.jpg) | ![Profile Editor](assets/profile_edit.jpg) |
+
+<div align="center">
+
+### 👥 Connections & Pending Requests
+![Connections Preview](assets/connections_preview.jpg)
+
+</div>
 
 ---
 
@@ -104,6 +123,11 @@ Manage your professional developer network and respond to incoming connection re
 DevTinder-Minor-Project/
 ├── assets/                          # Preview images and UI screenshots
 │   ├── devtinder_banner.jpg
+│   ├── home_page.png
+│   ├── signup_page.png
+│   ├── login_page.png
+│   ├── feed_page.png
+│   ├── profile_page.png
 │   ├── feed_preview.jpg
 │   ├── profile_edit.jpg
 │   └── connections_preview.jpg
