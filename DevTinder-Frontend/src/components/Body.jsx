@@ -66,9 +66,13 @@ const Body = () => {
           axios.get(`${BASE_URL}/user/requests/received`, {
             withCredentials: true,
           }),
-          axios.get(`${BASE_URL}/user/connections`, {
-            withCredentials: true,
-          }),
+          axios
+            .get(`${BASE_URL}/user/connection`, { withCredentials: true })
+            .catch(() =>
+              axios.get(`${BASE_URL}/user/connections`, {
+                withCredentials: true,
+              })
+            ),
         ]);
 
         if (requestsRes.status === "fulfilled" && requestsRes.value.data?.data) {

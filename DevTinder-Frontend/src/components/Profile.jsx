@@ -58,7 +58,13 @@ const Profile = () => {
       try {
         const [statsRes, connRes, reqRes] = await Promise.allSettled([
           axios.get(`${BASE_URL}/user/stats`, { withCredentials: true }),
-          axios.get(`${BASE_URL}/user/connections`, { withCredentials: true }),
+          axios
+            .get(`${BASE_URL}/user/connection`, { withCredentials: true })
+            .catch(() =>
+              axios.get(`${BASE_URL}/user/connections`, {
+                withCredentials: true,
+              })
+            ),
           axios.get(`${BASE_URL}/user/requests/received`, {
             withCredentials: true,
           }),
