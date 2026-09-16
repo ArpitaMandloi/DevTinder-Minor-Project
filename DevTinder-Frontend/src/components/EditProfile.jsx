@@ -62,7 +62,7 @@ const EditProfile = ({ user, onClose }) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const maxDim = 600;
+        const maxDim = 400;
         let width = img.width;
         let height = img.height;
 
@@ -83,7 +83,7 @@ const EditProfile = ({ user, onClose }) => {
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
 
-        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.8);
         setPhotoUrl(compressedDataUrl);
       };
       img.src = event.target.result;
@@ -127,14 +127,8 @@ const EditProfile = ({ user, onClose }) => {
     try {
       setError("");
 
-      // Compulsory fields check: GitHub URL and LinkedIn URL
-      if (!githubUrl || !githubUrl.trim()) {
-        setError("Please enter your GitHub Profile URL.");
-        return;
-      }
-
-      if (!linkedinUrl || !linkedinUrl.trim()) {
-        setError("Please enter your LinkedIn Profile URL.");
+      if (!firstName || !firstName.trim()) {
+        setError("Please enter your First Name.");
         return;
       }
 
@@ -154,43 +148,51 @@ const EditProfile = ({ user, onClose }) => {
         setSkillInput("");
       }
 
-      // Extract github username if full URL is given
+      // Extract github username if full URL or handle is given
       let extractedGithubUser = "";
-      const ghMatch = githubUrl.trim().match(/github\.com\/([^/?#]+)/i);
-      if (ghMatch && ghMatch[1]) {
-        extractedGithubUser = ghMatch[1];
-      } else if (!githubUrl.includes("/")) {
-        extractedGithubUser = githubUrl.trim().replace(/^@/, "");
+      let normalizedGithub = "";
+      if (githubUrl && githubUrl.trim()) {
+        const ghMatch = githubUrl.trim().match(/github\.com\/([^/?#]+)/i);
+        if (ghMatch && ghMatch[1]) {
+          extractedGithubUser = ghMatch[1];
+        } else if (!githubUrl.includes("/")) {
+          extractedGithubUser = githubUrl.trim().replace(/^@/, "");
+        }
+        normalizedGithub = formatGithubUrl(
+          githubUrl.trim(),
+          extractedGithubUser
+        );
       }
 
-      // Normalize into direct working profile URLs
-      const normalizedGithub = formatGithubUrl(
-        githubUrl.trim(),
-        extractedGithubUser
-      );
-      const normalizedLinkedin = formatLinkedinUrl(linkedinUrl.trim());
-      const normalizedTwitter = formatTwitterUrl(twitterUrl.trim());
-      const normalizedPortfolio = portfolioUrl.trim()
+      const normalizedLinkedin = linkedinUrl && linkedinUrl.trim()
+        ? formatLinkedinUrl(linkedinUrl.trim())
+        : "";
+      const normalizedTwitter = twitterUrl && twitterUrl.trim()
+        ? formatTwitterUrl(twitterUrl.trim())
+        : "";
+      const normalizedPortfolio = portfolioUrl && portfolioUrl.trim()
         ? formatExternalUrl(portfolioUrl.trim())
         : "";
 
       const payload = {
         firstName: firstName.trim(),
-        lastName: lastName.trim(),
+        lastName: lastName ? lastName.trim() : "",
         photoUrl: photoUrl || undefined,
-        age: age ? Number(age) : undefined,
-        gender: gender || undefined,
-        headline: headline.trim(),
-        location: location.trim(),
-        yearsOfExperience: yearsOfExperience
-          ? Number(yearsOfExperience)
+        age: age && !isNaN(Number(age)) && Number(age) >= 18 ? Number(age) : undefined,
+        gender: gender && ["male", "female", "other"].includes(gender.toLowerCase())
+          ? gender.toLowerCase()
           : undefined,
-        githubUsername: extractedGithubUser || undefined,
-        githubUrl: normalizedGithub,
-        linkedinUrl: normalizedLinkedin,
-        twitterUrl: normalizedTwitter,
-        portfolioUrl: normalizedPortfolio,
-        about: about.trim(),
+        headline: headline ? headline.trim() : "Full Stack Developer",
+        location: location ? location.trim() : "Remote",
+        yearsOfExperience: yearsOfExperience && !isNaN(Number(yearsOfExperience))
+          ? Number(yearsOfExperience)
+          : 0,
+        githubUsername: extractedGithubUser || "",
+        githubUrl: normalizedGithub || "",
+        linkedinUrl: normalizedLinkedin || "",
+        twitterUrl: normalizedTwitter || "",
+        portfolioUrl: normalizedPortfolio || "",
+        about: about ? about.trim() : "",
         skills: finalSkills,
       };
 
@@ -332,11 +334,11 @@ const EditProfile = ({ user, onClose }) => {
               </div>
             </div>
 
-            {/* Developer Profiles: GitHub & LinkedIn (Compulsory with *) */}
+            {/* Developer Profiles: GitHub & LinkedIn (Optional) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase mb-1.5 opacity-75 flex items-center gap-1">
-                  GitHub Profile URL <span className="text-cyan-400">*</span>
+                <label className="block text-xs font-bold uppercase mb-1.5 opacity-75">
+                  GitHub Profile URL
                 </label>
                 <input
                   type="text"
@@ -351,8 +353,8 @@ const EditProfile = ({ user, onClose }) => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase mb-1.5 opacity-75 flex items-center gap-1">
-                  LinkedIn Profile URL <span className="text-cyan-400">*</span>
+                <label className="block text-xs font-bold uppercase mb-1.5 opacity-75">
+                  LinkedIn Profile URL
                 </label>
                 <input
                   type="text"

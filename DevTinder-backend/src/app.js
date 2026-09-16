@@ -25,6 +25,7 @@ const isOriginAllowed = (origin, callback) => {
 
   if (
     allowedOrigins.includes(origin) ||
+    origin.endsWith(".vercel.app") ||
     origin.startsWith("http://localhost:")
   ) {
     return callback(null, true);
