@@ -37,6 +37,7 @@ const EditProfile = ({ user, onClose }) => {
   const [skills, setSkills] = useState(user?.skills || []);
   const [skillInput, setSkillInput] = useState("");
 
+  const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -50,11 +51,12 @@ const EditProfile = ({ user, onClose }) => {
       return;
     }
 
-    if (file.size > 8 * 1024 * 1024) {
-      setError("Selected photo must be smaller than 8MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Selected photo must be smaller than 10MB.");
       return;
     }
 
+    setSelectedFile(file);
     setError("");
 
     const reader = new FileReader();
@@ -148,6 +150,28 @@ const EditProfile = ({ user, onClose }) => {
         setSkillInput("");
       }
 
+      // If user chose a file from media, upload to get a direct HTTPS URL that works with any backend
+      let finalPhotoUrl = photoUrl;
+      if (selectedFile) {
+        try {
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+          const uploadRes = await axios.post(
+            "https://tmpfiles.org/api/v1/upload",
+            formData
+          );
+          if (uploadRes.data?.data?.url) {
+            finalPhotoUrl = uploadRes.data.data.url.replace(
+              "tmpfiles.org/",
+              "tmpfiles.org/dl/"
+            );
+            setPhotoUrl(finalPhotoUrl);
+          }
+        } catch (uploadErr) {
+          console.warn("Upload service fallback to direct photo:", uploadErr);
+        }
+      }
+
       // Extract github username if full URL or handle is given
       let extractedGithubUser = "";
       let normalizedGithub = "";
@@ -174,34 +198,68 @@ const EditProfile = ({ user, onClose }) => {
         ? formatExternalUrl(portfolioUrl.trim())
         : "";
 
-      const payload = {
+      const basePayload = {
         firstName: firstName.trim(),
         lastName: lastName ? lastName.trim() : "",
-        photoUrl: photoUrl || undefined,
-        age: age && !isNaN(Number(age)) && Number(age) >= 18 ? Number(age) : undefined,
-        gender: gender && ["male", "female", "other"].includes(gender.toLowerCase())
-          ? gender.toLowerCase()
-          : undefined,
-        headline: headline ? headline.trim() : "Full Stack Developer",
-        location: location ? location.trim() : "Remote",
-        yearsOfExperience: yearsOfExperience && !isNaN(Number(yearsOfExperience))
-          ? Number(yearsOfExperience)
-          : 0,
-        githubUsername: extractedGithubUser || "",
-        githubUrl: normalizedGithub || "",
-        linkedinUrl: normalizedLinkedin || "",
-        twitterUrl: normalizedTwitter || "",
-        portfolioUrl: normalizedPortfolio || "",
+        photoUrl: finalPhotoUrl || undefined,
+        ...(gender && ["male", "female", "other"].includes(gender.toLowerCase())
+          ? { gender: gender.toLowerCase() }
+          : {}),
+        ...(age && !isNaN(Number(age)) && Number(age) >= 18
+          ? { age: Number(age) }
+          : {}),
         about: about ? about.trim() : "",
         skills: finalSkills,
       };
 
-      const res = await axios.patch(`${BASE_URL}/profile/edit`, payload, {
-        withCredentials: true,
-      });
+      const payloadWithExtras = {
+        ...basePayload,
+        ...(headline ? { headline: headline.trim() } : {}),
+        ...(location ? { location: location.trim() } : {}),
+        ...(yearsOfExperience && !isNaN(Number(yearsOfExperience))
+          ? { yearsOfExperience: Number(yearsOfExperience) }
+          : {}),
+        ...(normalizedGithub
+          ? { githubUrl: normalizedGithub, githubUsername: extractedGithubUser }
+          : {}),
+        ...(normalizedLinkedin ? { linkedinUrl: normalizedLinkedin } : {}),
+        ...(normalizedTwitter ? { twitterUrl: normalizedTwitter } : {}),
+        ...(normalizedPortfolio ? { portfolioUrl: normalizedPortfolio } : {}),
+      };
 
-      dispatch(addUser(res.data.data));
-      onClose(true);
+      try {
+        const res = await axios.patch(
+          `${BASE_URL}/profile/edit`,
+          payloadWithExtras,
+          {
+            withCredentials: true,
+          }
+        );
+        dispatch(addUser(res.data.data));
+        onClose(true);
+        return;
+      } catch (err) {
+        const errMsg = err.response?.data?.message || err.message;
+        if (
+          errMsg &&
+          (errMsg.includes("invalid Edit") ||
+            errMsg.includes("Invalid fields") ||
+            errMsg.includes("validation failed"))
+        ) {
+          // Backward-compatible fallback for older backend deployments
+          const retryRes = await axios.patch(
+            `${BASE_URL}/profile/edit`,
+            basePayload,
+            {
+              withCredentials: true,
+            }
+          );
+          dispatch(addUser(retryRes.data.data));
+          onClose(true);
+          return;
+        }
+        setError(errMsg);
+      }
     } catch (err) {
       setError(err.response?.data?.message || err.message);
     } finally {
